@@ -16,6 +16,7 @@ import java.io.IOException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import ru.rgordeev.httpexample.model.Currencies;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,20 +37,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class HTTPConnection extends AsyncTask<Void, Void, JsonElement> {
+    private class HTTPConnection extends AsyncTask<Void, Void, Currencies> {
 
         @Override
-        protected void onPostExecute(JsonElement jsonElement) {
-            super.onPostExecute(jsonElement);
-            String text = jsonElement == null ? "" : jsonElement.toString();
+        protected void onPostExecute(Currencies currencies) {
 
-            output.setText(text);
+            String key = "RUB";
+            Double value = currencies.getRates().get(key);
+
+            output.setText(String.format("1 EUR = %.2f RUB", value));
         }
 
         @Override
-        protected JsonElement doInBackground(Void... voids) {
+        protected Currencies doInBackground(Void... voids) {
 
-            JsonElement result;
+            Currencies result;
             OkHttpClient httpClient = new OkHttpClient();
             Request request = new Request.Builder()
                     .url("https://api.exchangeratesapi.io/latest")
@@ -59,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Response response = httpClient.newCall(request).execute();
                 String text = response.body().string();
-                result = new Gson().fromJson(text, JsonElement.class);
+                result = new Gson().fromJson(text, Currencies.class);
             } catch (IOException e) {
                 e.printStackTrace();
                 result = null;
