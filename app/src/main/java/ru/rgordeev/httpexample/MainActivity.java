@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             Currencies result;
             OkHttpClient httpClient = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url("https://api.exchangeratesapi.io/latest")
+                    .url("http://api.exchangeratesapi.io/v1/latest?access_key=2a198fc99182d8257ec81baf79afe155&format=1")
                     .get()
                     .build();
 
