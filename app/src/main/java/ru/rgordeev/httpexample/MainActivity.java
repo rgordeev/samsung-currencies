@@ -1,5 +1,7 @@
 package ru.rgordeev.httpexample;
 
+import static com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ServiceConnection;
@@ -9,6 +11,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import java.io.IOException;
@@ -17,6 +20,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import ru.rgordeev.httpexample.model.Currencies;
+import ru.rgordeev.httpexample.model.Film;
+import ru.rgordeev.httpexample.model.Person;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,31 +42,41 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class HTTPConnection extends AsyncTask<Void, Void, Currencies> {
+    private class HTTPConnection extends AsyncTask<Void, Void, Person> {
 
         @Override
-        protected void onPostExecute(Currencies currencies) {
-
-            String key = "RUB";
-            Double value = currencies.getRates().get(key);
-
-            output.setText(String.format("1 EUR = %.2f RUB", value));
+        protected void onPostExecute(Person person) {
+            output.setText(String.format("%s", person.toString()));
         }
 
         @Override
-        protected Currencies doInBackground(Void... voids) {
+        protected Person doInBackground(Void... voids) {
 
-            Currencies result;
+            Person result;
             OkHttpClient httpClient = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url("http://api.exchangeratesapi.io/v1/latest?access_key=2a198fc99182d8257ec81baf79afe155&format=1")
+                    .url("https://swapi.dev/api/people/1")
                     .get()
                     .build();
+
+
 
             try {
                 Response response = httpClient.newCall(request).execute();
                 String text = response.body().string();
-                result = new Gson().fromJson(text, Currencies.class);
+                Gson gson = new GsonBuilder().setFieldNamingStrategy(LOWER_CASE_WITH_UNDERSCORES).create();
+                result = gson.fromJson(text, Person.class);
+
+                for (String filmUrl: result.getFilms()) {
+                    Request requestFilm = new Request.Builder()
+                            .url(filmUrl)
+                            .get()
+                            .build();
+                    Response responseFilm = httpClient.newCall(requestFilm).execute();
+                    String textFilm = responseFilm.body().string();
+                    Film film = gson.fromJson(textFilm, Film.class);
+                    result.getFilmObjects().add(film);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 result = null;
